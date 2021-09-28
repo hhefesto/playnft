@@ -103,13 +103,21 @@ let upstream =
 in  upstream
   with tagged =
     { dependencies =
-        [ "identity"
+        [ "console"
+        , "control"
+        , "effect"
+        , "foldable-traversable"
+        , "identity"
+        , "invariant"
+        , "newtype"
+        , "prelude"
         , "profunctor"
+        , "psci-support"
         ]
     , repo =
-        "https://github.com/LiamGoodacre/purescript-tagged.git"
+        "https://github.com/hhefesto/purescript-tagged.git"
     , version =
-        "v3.0.0"
+        "v3.0.1"
     }
   with eth-core =
     { dependencies =
