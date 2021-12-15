@@ -351,7 +351,7 @@ update msg model = case msg of
   Recv incoming -> ({model | fromJavascript = incoming }, Cmd.none)
   -- GetArtDisplayRecv incoming ->
 
-  TestMsg -> (model, sendMessage "something!!!!!!!!!!!!!!!!!!!!")
+  TestMsg -> (model, sendMessage "something!")
   -- TestMsg -> (model, Cmd.none)
   TabMsg state ->
     ( { model | tabState = state }
