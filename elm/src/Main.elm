@@ -151,6 +151,7 @@ type Page
   = ArtListingsInterface
   | ArtistInterface
   | AdminInterface
+  | LoginInterface
   | NotFound
 
 type ArtListingsDict = ArtListingsDict (Dict Int ArtListing) -- Int represents id of ArtListing
@@ -415,6 +416,7 @@ routeParser = UrlParser.oneOf
   [ UrlParser.map ArtListingsInterface top
   , UrlParser.map ArtistInterface (UrlParser.s "artist")
   , UrlParser.map AdminInterface (UrlParser.s "admin")
+  , UrlParser.map LoginInterface (UrlParser.s "login")
   ]
 
 view : Model -> Browser.Document Msg
@@ -438,6 +440,18 @@ menu model = Navbar.config NavMsg
       , Navbar.itemLink [ href "#admin" ] [ text "Administrator Interface" ]
       ]
   -- |> Navbar.attrs [ class "navbar navbar-expand-lg navbar-dark navbar-custom fixed-top" ]
+  |> Navbar.customItems
+     [ Navbar.formItem [ href "#login" ]
+       [ Button.button
+         [ Button.roleLink
+         , Button.attrs [ Spacing.ml2Sm
+                        , href "#login"
+                        ]
+         ]
+         [ text "Login"]
+       ]
+     -- , Navbar.textItem [ Spacing.ml2Sm, class "muted" ] [ text "Text"]
+     ]
   |> Navbar.view model.navState
 
 mainContent : Model -> Html Msg
@@ -446,6 +460,7 @@ mainContent model = Grid.container [] <|
     ArtListingsInterface -> pageArtListingsInterface model
     ArtistInterface -> pageArtistInterface model
     AdminInterface -> pageAdminInterface model
+    LoginInterface -> pageLoginInterface model
     NotFound -> pageNotFound
 
 
@@ -666,6 +681,27 @@ artistNewArtListingTab model =
           , text "You must select a file and an auction date end."
           ]
       |> Alert.view model.artistState.newListingErrorVisibility
+  ]
+
+pageLoginInterface : Model -> List (Html Msg)
+pageLoginInterface model =
+  [ Grid.row []
+      [ Grid.col [ Col.textAlign Text.alignXsCenter ]
+          [ br [] []
+          , h1 [] [ text "Login Interface" ]
+          , br [] []
+          ]
+      ]
+  , Grid.row []
+      [ Grid.col [] [ h4 [] [ text "Artist's address:" ]
+                    , input [ placeholder "Your wallet's address"
+                            , size 30
+                            , style "margin" "10px"
+                            ]
+                        []
+                    , Button.button [] [ text "Submit" ]
+                    ]
+      ]
   ]
 
 pageAdminInterface : Model -> List (Html Msg)
