@@ -8,7 +8,12 @@ $ nix develop -c $SHELL
 $ cd eth
 $ yarn startg # then on your browser go to Metamask, Settings, Advanced, Reset Account
 ...
-$ # on a new shell (yarn startg will keep a shell running)
+$ pwd # on a new `nix develop` shell (yarn startg will keep the terminal ocupied, so you'll need a new one for this)
+path/to/playNFT/eth
+$ cat .env # be sure to have this environmet variables or `yarn migrate` will fail
+INFURA_API_KEY=e2ed325a9f544f0a8e7ca5ea86c608ed
+MNEMONIC="damage sign blast goddess ten filter proof slush quality leader story index"
+ADMIN_ADDRESS=0xD01990F227CcBF0626E09F3B61Df1221B9b85841
 $ yarn migrate # And look for something like "contract address: 0xD940ca1D900538ED8fb1a303b3eaA5a1fE24aAcD" and copy the 42 char number and put it in `playNFT/elm/constants.js` (replacing whatever is there)
 $ # profit
 ```

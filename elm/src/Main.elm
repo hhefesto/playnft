@@ -782,8 +782,8 @@ pageArtListingsInterface model =
               [ Button.secondary
               , Button.large
               , Button.block
-              -- , Button.attrs [ onClick <| GetArtistSend "0xD01990F227CcBF0626E09F3B61Df1221B9b85841" ] -- success
-              , Button.attrs [ onClick <| GetArtistSend "0xD01990F227CcBF0626E09F3B61Df1221B9b85840" ] -- error, but doesn't work TODO: FIX. See: app.ports.getArtistSend.subscribe(function(addr) {
+              , Button.attrs [ onClick <| GetArtistSend "0xD01990F227CcBF0626E09F3B61Df1221B9b85841" ] -- success
+              -- , Button.attrs [ onClick <| GetArtistSend "0xD01990F227CcBF0626E09F3B61Df1221B9b85840" ] -- error, but doesn't work TODO: FIX. See: app.ports.getArtistSend.subscribe(function(addr) {
               ]
               [ text "Get Artist" ]
           ]
