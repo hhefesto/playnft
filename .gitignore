@@ -4,7 +4,7 @@ eth/node_modules/
 eth/.env
 react/node_modules/
 react/yarn.lock
-react/images/
+eth/images/
 react/.env
 
 elm-stuff/

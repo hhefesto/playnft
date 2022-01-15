@@ -3,7 +3,6 @@
  display: flex;
  justify-content: center;
  background-color: #f2f1f5;
- height: 100vh;
 }
 .card {
  min-height: 50vh;
