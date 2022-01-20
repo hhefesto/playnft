@@ -38,9 +38,11 @@ type alias Flags =
 
 type alias Model =
   { navKey : Navigation.Key
+  , artistAddress : String -- TODO: maybe make it maybe
   , registerFeatureCreatedListenerList : List Int
   , registerArtCreatedListenerList : List Int
   , finishArt : Maybe Bool
+  , controlStartArtWithFeature : Maybe Bool
   , nextFeature : Maybe Bool
   , makeBid : Maybe Value
   , startFeature : Maybe Bool
@@ -83,6 +85,8 @@ type Msg
   | GetNumArtistSend
   | RegisterFeatureCreatedListener Int
   | RegisterArtCreatedListener Int
+  | ControlStartArtWithFeatureReceiver Bool
+  | ControlStartArtWithFeatureSend (String, String)
   | FinishArtReceiver Bool
   | FinishArtSend Int
   | NextFeatureReceiver Bool
@@ -124,6 +128,7 @@ type Msg
   | NewListing ArtListing
   | SetTitle String
   | SetArtist String
+  | SetArtistAddress String
   | ReceiveDate Date
   | TabMsg Tab.State
   | AuctionEndDropdown Dropdown.State
@@ -187,6 +192,8 @@ init flags url key =
                             --                 }
                             -- }--
                             { navKey = key
+                            , controlStartArtWithFeature = Nothing
+                            , artistAddress = "hhefesto"
                             , navState = navState
                             , page = ArtListingsInterface
                             , artListings = ArtListingsDict Dict.empty
@@ -250,6 +257,7 @@ subscriptions model = Sub.batch [ Navbar.subscriptions model.navState NavMsg
                                 , makeBidReceiver MakeBidReceiver
                                 , nextFeatureReceiver NextFeatureReceiver
                                 , finishArtReceiver FinishArtReceiver
+                                , controlStartArtWithFeatureReceiver ControlStartArtWithFeatureReceiver
                                 , registerArtCreatedListener RegisterArtCreatedListener
                                 , registerFeatureCreatedListener RegisterFeatureCreatedListener
                                 , getArtDisplayReceiver << GetArtDisplayRecv  << Tuple.first <| model.fromJSgetArtDisplayRecv
@@ -290,12 +298,19 @@ setAuctionEndDropdown sart s = { sart | auctionEndDropdown = s }
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model = case msg of
+  SetArtistAddress str -> ({ model | artistAddress  = str }
+                                      , Cmd.none
+                                      )
   RegisterFeatureCreatedListener i -> ({ model | registerFeatureCreatedListenerList  = i :: model.registerFeatureCreatedListenerList }
                                       , Cmd.none
                                       )
   RegisterArtCreatedListener i -> ({ model | registerArtCreatedListenerList  = i :: model.registerArtCreatedListenerList }
                                   , Cmd.none
                                   )
+
+  ControlStartArtWithFeatureReceiver bool -> ({ model | controlStartArtWithFeature = Just bool}, Cmd.none)
+  ControlStartArtWithFeatureSend pair -> (model, controlStartArtWithFeatureSend pair)
+
   FinishArtReceiver bool -> ({ model | finishArt = Just bool}, Cmd.none)
   FinishArtSend i -> (model, finishArtSend i)
   NextFeatureReceiver bool -> ({ model | nextFeature = Just bool}, Cmd.none)
@@ -347,7 +362,8 @@ update msg model = case msg of
   SetRequestDraft i str -> case str of
                             "" -> (model, Cmd.none)
                             _ -> ({model | requestsDict = Dict.update i (\x -> Just str) model.requestsDict}, Cmd.none)
-  SetAuctionDays i -> (setArtistState model <| setDate model.artistState <| Maybe.map (Date.add Date.Days i) model.today, Cmd.none)
+  SetAuctionDays i -> (setArtistState model <| setDate model.artistState
+                                            <| Maybe.map (Date.add Date.Days i) model.today, Cmd.none)
   AuctionEndDropdown state -> (setArtistState model <| setAuctionEndDropdown model.artistState state, Cmd.none)
   Recv incoming -> ({model | fromJavascript = incoming }, Cmd.none)
   -- GetArtDisplayRecv incoming ->
@@ -718,9 +734,17 @@ pageAdminInterface model =
                     , input [ placeholder "Your wallet's address"
                             , size 30
                             , style "margin" "10px"
+                            , onInput <| SetArtistAddress
                             ]
                         []
-                    , Button.button [] [ text "Submit" ]
+                    , Button.button
+                        [ Button.secondary
+                        , Button.large
+                        , Button.block
+                        , Button.attrs [ onClick <| AddArtistSend model.artistAddress ]
+                        ]
+                        [ text "Add Artist" ]
+                          -- Button.button [] [ text "Submit" ]
                     ]
       ]
 

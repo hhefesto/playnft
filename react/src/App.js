@@ -141,7 +141,10 @@ class ArtistInterface extends React.Component {
             reader.readAsDataURL(thisFile);
             reader.onloadend = function() {
                 const imageData = reader.result;
-
+                console.log("featureEndTime!!!!!!!!!!!11");
+                console.log(featureEndTime);
+                console.log("imageData!!!!!!!!!!!11");
+                console.log(imageData);
                 api.controlStartArtWithFeature(featureEndTime, imageData).then(receipt => {
                     alert("new art created");
                 }, err => {

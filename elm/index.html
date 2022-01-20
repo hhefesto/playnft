@@ -5,10 +5,15 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <script type="text/javascript" src="Main.min.js"></script>
-    <script src="web3.min.js"></script>
     <script src="https://unpkg.com/@metamask/detect-provider/dist/detect-provider.min.js"></script>
+    <script src="web3.min.js"></script>
     <script src="constants.js"></script>
     <script src="abi.js"></script>
+    <script src="ethereum.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+
+
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <!-- <link rel="stylesheet" href="datepicker.css"> -->
     <!-- <link rel="stylesheet" href="custom.css"> -->
@@ -16,14 +21,18 @@
 
     </style>
   </head>
-  <body>
+  <body onload="myFunction()">
     <div id="playNFT"></div>
     <div id="testText"></div>
   </body>
   <script type="text/javascript">
+    const myFunction = _ => {
+      console.log("BLAAAAAAAAAAAAAAAAAAA!@!!!!");
+    };
     var app = Elm.Main.init({
       node: document.getElementById('playNFT')
     });
+    
     
     // const web3 = new Web3(constants.providerHost);
     // console.log("web3");
@@ -35,15 +44,21 @@
     // socket.addEventListener("message", function(event) {
     //   app.ports.messageReceiver.send(event.data);
     // });
-    
-    app.ports.sendMessage.subscribe(function(message) {
-        console.log(message)
-        siteContract.then(sc => {
+
+      app.ports.sendMessage.subscribe(function(message) {
+          console.log("1111111111111");
+        console.log(message);
+          siteContract.then(sc => {
+              console.log("2222222222222");
             sc.methods.getTestMessage().call().then((tm) => {
+                console.log("3333333333333333");
             console.log(tm);
             app.ports.messageReceiver.send(tm);
             // app.ports.
             // document.getElementById("testText").innerHTML = tm;
+            }).catch(err => {
+                console.log("44444444444444444444");
+                console.log(err);
             });
         })
     });
@@ -55,8 +70,15 @@
             app.ports.getArtDisplayReceiver.send(x);
         });
     });
+    app.ports.controlStartArtWithFeatureSend.subscribe(function(featureEndTime, imageData) {
+        controlStartArtWithFeature(featureEndTime, imageData).then(_ => {
+            app.ports.controlStartArtWithFeatureReceiver.send(true);
+        }).catch(_ => {
+            app.ports.controlStartArtWithFeatureReceiver.send(false);
+        });
+    });
     app.ports.addArtistSend.subscribe(function(addr) {
-        addArtist(addr).then(_ => {
+        addArtist(addr).then(x => {
             app.ports.addArtistReceiver.send(true);
         }).catch(_ => {
             app.ports.addArtistReceiver.send(false);
@@ -203,418 +225,5 @@
             app.ports.finishArtReceiver.send(false);
         });
     });
-        // --- section for simple promises that are initialized once, and then never changed --------------------
-    const web3 = new Promise ((resolve, reject) => {
-        detectEthereumProvider().then((provider) => {
-            if (provider) {
-                resolve(new Web3(provider));
-            } else {
-                reject("No Ethereum wallet detected");
-            }
-        });
-    });
-
-    const siteContract = new Promise ((resolve, reject) => {
-        web3.then((w3) => {
-            resolve(new w3.eth.Contract(site, constants.contractAddress));
-        });
-    });
-
-    const userAccount = new Promise ((resolve, reject) => {
-        detectEthereumProvider().then((ep) => {
-            ep.request({ method: 'eth_requestAccounts' }).then((accounts) => {
-                resolve(accounts[0]);
-            });
-        });
-    });
-
-    // --- section for Promise wrappers around web3 functions ----------------------
-    // Get all the art from all the artists (returns integer)
-    const getNumArt = function () {
-        return new Promise((resolve, reject) => {
-            siteContract.then((sc) => {
-                sc.methods.getNumArt().call().then((r) => resolve(r[0]));
-            });
-        });
-    };
-    // Returns int
-    const getNumArtists = function () {
-        return new Promise((resolve, reject) => {
-            siteContract.then((sc) => {
-                sc.methods.getNumArtist().call().then((r) => resolve(r[0]));
-            });
-        });
-    };
-    // artId is an Int. Returns JSON {0:artist_address_string, 1:art_finished_bool, 2:art_currentFeatureId_int}
-    const getArt = function (artId) {
-        return new Promise((resolve, reject) => {
-            siteContract.then((sc) => {
-                sc.methods.getArt(artId).call().then(resolve);
-            });
-        });
-    };
-    // returns a JSON { 0:a_name_string, 1: a_description_string, 2:address_string}
-    const getArtist = function (artistAddress) {
-        return new Promise((resolve, reject) => {
-            siteContract.then((sc) => {
-                sc.methods.getArtist(artistAddress).call().then(resolve);
-            });
-        });
-    };
-    // returns a JSON {0:uint, 1:uint, 2:int64, 3:int64, 4:bool}
-    const getFeature = function (featureId) { // featureId : int
-        return new Promise((resolve, reject) => {
-            siteContract.then((sc) => {
-                sc.methods.getFeature(featureId).call().then(resolve);
-            });
-        });
-    };
-    // returns -1 if art doesn't have a feature yet. returns featureId otherwise
-    const getDisplayFeature = function (artId) {
-        return new Promise((resolve, reject) => {
-            siteContract.then((sc) => {
-                sc.methods.getDisplayFeature(artId).call().then((r) => resolve(r[0]));
-            });
-        });
-    };
-    // returns {0:int64, 1:address_payable_string, 2:uint, 3:string memory}
-    const getBid = function (bidId) {
-        return new Promise((resolve, reject) => {
-            siteContract.then((sc) => {
-                sc.methods.getBid(bidId).call().then(resolve);
-            });
-        });
-    };
-
-    const addArtist = function (address) {
-        return new Promise((resolve, reject) => {
-            siteContract.then((sc) => {
-                userAccount.then ((account) => {
-                    sc.methods.addArtist(address).estimateGas().then((gas) => {
-                        try {
-                            const method = sc.methods.addArtist(address);
-                            const post = method.send({
-                                from: account,
-                                gas,
-                            }).on('receipt', function(receipt){
-                                resolve(receipt);
-                            }).on('error', function(error, receipt) {
-                                reject(error);
-                            });
-                        } catch (error) {
-                            console.log(error);
-                            alert(error);
-                        }
-                    });
-                });
-            });
-        });
-    };
-
-    const modifyArtistProfile = function (name, description) {
-        return new Promise((resolve, reject) => {
-            siteContract.then((sc) => {
-                userAccount.then ((account) => {
-                    const method = sc.methods.modifyArtistProfile(name, description);
-                    method.estimateGas().then((gas) => {
-                        method.send({
-                            from: account,
-                            gas,
-                        }).on('error', function(error, receipt) {
-                            reject(error);
-                        }).on('receipt', function(receipt) {
-                            resolve(receipt);
-                        });
-                    });
-                });
-            });
-        });
-    };
-
-    const startArtWithFeature = function () {
-        return new Promise((resolve, reject) => {
-            siteContract.then((sc) => {
-                userAccount.then ((account) => {
-                    sc.methods.startArtWithFeature().estimateGas().then((gas) => {
-                        sc.methods.startArtWithFeature().send({
-                            from: account,
-                            gas,
-                        }).on('error', function(error, receipt) {
-                            reject(error);
-                        }).on('receipt', function(receipt) {
-                            resolve(receipt);
-                        });
-                    });
-                });
-            });
-        });
-    };
-
-
-    const startFeature = function (artId, endTime) {
-        return new Promise((resolve, reject) => {
-            siteContract.then((sc) => {
-                userAccount.then ((account) => {
-                    const method = sc.methods.startFeature(artId, endTime);
-                    method.estimateGas().then((gas) => {
-                        method.send({
-                            from: account,
-                            gas,
-                        }).on('error', function(error, receipt) {
-                            reject(error);
-                        }).on('receipt', function(receipt) {
-                            resolve(receipt);
-                        });
-                    });
-                });
-            });
-        });
-    };
-
-    const makeBid = function (artId, request, amount) {
-        return new Promise((resolve, reject) => {
-            siteContract.then((sc) => {
-                userAccount.then ((account) => {
-                    const method = sc.methods.makeBid(artId, request);
-                    method.estimateGas({value: amount}).then((gas) => {
-                        method.send({
-                            from: account,
-                            gas,
-                            value: amount
-                        }).on('error', function(error, receipt) {
-                            reject(error);
-                        }).on('receipt', function(receipt) {
-                            resolve(receipt);
-                        });
-                    });
-                });
-            });
-        });
-    };
-
-    const nextFeature = function (artId, endTime) {
-        return new Promise((resolve, reject) => {
-            siteContract.then((sc) => {
-                userAccount.then ((account) => {
-                    const method = sc.methods.nextFeature(artId, endTime);
-                    method.estimateGas().then((gas) => {
-                        method.send({
-                            from: account,
-                            gas,
-                        }).on('error', function(error, receipt) {
-                            reject(error);
-                        }).on('receipt', function(receipt) {
-                            resolve(receipt);
-                        });
-                    });
-                });
-            });
-        });
-    };
-
-    const finishArt = function (artId) {
-        return new Promise((resolve, reject) => {
-            siteContract.then((sc) => {
-                userAccount.then ((account) => {
-                    const method = sc.methods.finishArt(artId);
-                    method.estimateGas().then((gas) => {
-                        method.send({
-                            from: account,
-                            gas,
-                        }).on('error', function(error, receipt) {
-                            reject(error);
-                        }).on('receipt', function(receipt) {
-                            resolve(receipt);
-                        });
-                    });
-                });
-            });
-        });
-    };
-
-    const signFeatureImage = function (featureId, imageHash) {
-        return new Promise((resolve, reject) => {
-            web3.then ((w3) => {
-                userAccount.then ((account) => {
-                    w3.currentProvider.sendAsync({
-                        method: 'net_version',
-                        params: [],
-                        jsonrpc: "2.0"
-                    }, function (err, result) {
-                        const netId = result.result;
-                        const msgParams = JSON.stringify({types:{
-                            EIP712Domain:[
-                                {name:"name",type:"string"},
-                                {name:"version",type:"string"},
-                                {name:"chainId",type:"uint256"},
-                                {name:"verifyingContract",type:"address"}
-                            ],
-                            Message:[
-                                {name:"featureId",type:"uint64"},
-                                {name:"imageHash",type:"string"}
-                            ]
-                        },
-                            primaryType:"Message",
-                            domain:{name:"Play NFT",
-                                    version:process.env.REACT_APP_VERSION,
-                                    chainId:process.env.REACT_APP_CHAIN_ID,
-                                    verifyingContract:process.env.REACT_APP_CONTRACT_ADDRESS
-                                    },
-                            message:{featureId:featureId, imageHash:imageHash}
-                        });
-
-                        w3.currentProvider.sendAsync(
-                            {
-                                method: "eth_signTypedData_v3",
-                                params: [account, msgParams],
-                                from: account
-                            },
-                            function(err, result) {
-                                if (err) {
-                                    reject(err);
-                                } else {
-                                    resolve({message: msgParams, signature: result.result}); // TODO: Ask what are the types of msgParams and resutl.result
-                                }
-                            }
-                        );
-                    });
-                });
-            });
-        });
-    };
-
-    // --- section for component control methods ------------------------------------------
-
-    // returns solidity receipt for finishArt or nextFeature
-    // returns JSON Value
-    const controlCompleteFeature = function (artId, featureId, completeArtwork, featureEndTime, imageFile) {
-        return new Promise((resolve, reject) => {
-            web3.then ((w3) => {
-                const imageHash = w3.utils.sha3(encodeURIComponent(imageFile.text()));
-
-                signFeatureImage(featureId, imageHash).then((signResult) => {
-                    const formData = new FormData();
-                    formData.append("image", imageFile);
-                    formData.append("signedData", signResult.message);
-                    formData.append("signature", signResult.signature);
-                    formData.append("feature", featureId);
-
-                    axios.post(constants.apiHost + "/upload-image", formData).then ((res) => {
-                        if (res.data.status) {
-
-                            if (completeArtwork) {
-                                finishArt(artId).then((receipt) => {
-                                    resolve(receipt);
-                                });
-
-                            } else {
-                                nextFeature(artId, featureEndTime).then((featureReceipt) => {
-                                    resolve(featureReceipt);
-                                });
-                            }
-                        } else {
-                            reject({error: "error uploading image", result:res});
-                        }
-                    }).catch ((err) => {
-                        reject({error: "problem signing/posting image", result:err});
-                    });
-                });
-            });
-        });
-    };
-
-    // TODO should probably utilize controlCompleteFeature
-    // returns solidity receipt for startFeature
-    // returns JSON Value
-    const controlStartArtWithFeature = function (featureEndTime, imageFile) {
-        return new Promise((resolve, reject) => {
-            web3.then ((w3) => {
-                const imageHash = w3.utils.sha3(encodeURIComponent(imageFile.text()));
-                startArtWithFeature().then((receipt) => {
-                    const artId = receipt.events.ArtCreated.returnValues.artId;
-                    const featureId = receipt.events.FeatureCreated.returnValues.featureId;
-
-                    signFeatureImage(featureId, imageHash).then((signResult) => {
-                        const formData = new FormData();
-                        formData.append("image", imageFile);
-                        formData.append("signedData", signResult.message);
-                        formData.append("signature", signResult.signature);
-                        formData.append("feature", featureId);
-
-                        axios.post(constants.apiHost + "/upload-image", formData).then ((res) => {
-                            if (res.data.status) {
-                                startFeature(artId, featureEndTime).then((featureReceipt) => {
-                                    resolve(receipt);
-                                });
-                            } else {
-                                reject({error: "problem uploading image", result:res});
-                            }
-                        }).catch ((err) => {
-                            reject({error: "problem signing/posting image", result:err});
-                        });
-                    });
-                });
-            });
-
-        });
-    };
-
-    // returns {artistName, imgUrl, timeText, bidAmount, featureRequest, artId, featureId}
-    const getArtDisplay = function (i) { // i is the artId
-        return new Promise ((resolve, reject) => {
-            getArt(i).then((art) => {
-                const currentFeatureId = art[2];
-                getArtist(art[0]).then((artist) => {
-                    getDisplayFeature(i).then((fid) => {
-                        const endTimeCallback = (timeText, bidAmount, featureRequest) => {
-                            const imgUrl = constants.apiHost + "/" + fid + ".png";
-                            resolve({artistName: artist[0], imgUrl: imgUrl, timeText: timeText
-                                     , bidAmount: bidAmount, featureRequest: featureRequest, artId:i, featureId:currentFeatureId });
-                        };
-
-                        if (art[1]) {
-                            endTimeCallback("Artwork is complete", "", "");
-
-                        } else if (currentFeatureId > -1) {
-                            getFeature(currentFeatureId).then((feature) => {
-                                const endTime = new Date(feature[1] * 1000);
-                                const bidId = feature[3];
-                                const timeText = "Bidding ending at " + endTime;
-                                if (bidId > -1) {
-                                    getBid(bidId).then((bid) => {
-                                        endTimeCallback(timeText, "Bid amount: " + bid[2], "Feature request: " + bid[3]);
-                                    });
-                                } else {
-                                    endTimeCallback(timeText, "", "No bids yet");
-                                }
-                            });
-
-                        } else {
-                            endTimeCallback("Not open for bidding yet", "", "");
-                        }
-                    });
-                });
-            });
-        });
-    };
-
-    // --- section for web3 event listeners --------------------------------
-    // These are just receivers (no send port)
-    // This returns artId (int)
-    const registerArtCreatedListener = function (callback) {
-        siteContract.then((sc) => {
-            sc.events.ArtCreated().on('data', event => {
-                callback(event.returnValues.artId);
-            });
-        });
-    };
-    // This returns featureId (int)
-    const registerFeatureCreatedListener = function (callback) {
-        siteContract.then((sc) => {
-            sc.events.FeatureCreated().on('data', event => {
-                callback(event.returnValues.featureId);
-            });
-        });
-    };
 
   </script>
