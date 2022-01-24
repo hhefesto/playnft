@@ -40,6 +40,11 @@
         version = "1.0.5";
       };
 
+      "PanagiotisGeorgiadis/elm-datetime" = {
+        sha256 = "10fd2pad1kv8gm8zj2ixspyyxjqlzx50s3di17vl51gp41j05qbw";
+        version = "1.3.0";
+      };
+
       "elm/url" = {
         sha256 = "0av8x5syid40sgpl5vd7pry2rq0q4pga28b4yykn9gd9v12rs3l4";
         version = "1.0.0";

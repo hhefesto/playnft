@@ -1,10 +1,9 @@
 module Main exposing (main)
 
 import OutsideInfo exposing (..)
-import Date exposing (Date, day, month, weekday, year)
 import Dict exposing (Dict, empty, update, get)
 import Json.Decode exposing (Value)
-import Time exposing (Weekday(..))
+import Time exposing (millisToPosix, posixToMillis, Posix, now, Weekday(..), toYear, toMonth, toDay, utc, Month(..))
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
@@ -38,6 +37,7 @@ type alias Flags =
 
 type alias Model =
   { navKey : Navigation.Key
+  , bioDraft : String
   , artistAddress : String -- TODO: maybe make it maybe
   , registerFeatureCreatedListenerList : List Int
   , registerArtCreatedListenerList : List Int
@@ -62,7 +62,7 @@ type alias Model =
   , navState : Navbar.State
   , artListings : ArtListingsDict
   , artistState : ArtistState
-  , today : Maybe Date
+  , today : Maybe Posix
   , tabState : Tab.State
   , fromJavascript : String
   , fromJSgetArtDisplayRecv : (Int, Maybe Value) -- (argument to JS getArtDisplay, {artistName, imgUrl, timeText, bidAmount, featureRequest, artId, featureId})
@@ -74,7 +74,7 @@ type alias ArtistState =
   { loggedArtist : Maybe Artist
   , artFile : Maybe File
   , imagePreview : String -- empty string represents no image preview
-  , selectedAuctionEndDate : Maybe Date
+  , selectedAuctionEndDate : Maybe Posix
   , newListingErrorVisibility : Alert.Visibility
   , title : String
   , auctionEndDropdown : Dropdown.State
@@ -83,6 +83,7 @@ type alias ArtistState =
 type Msg
   = GetNumArtistReceiver Int
   | GetNumArtistSend
+  | BioDraft String
   | RegisterFeatureCreatedListener Int
   | RegisterArtCreatedListener Int
   | ControlStartArtWithFeatureReceiver Bool
@@ -129,7 +130,7 @@ type Msg
   | SetTitle String
   | SetArtist String
   | SetArtistAddress String
-  | ReceiveDate Date
+  | ReceiveDate Posix
   | TabMsg Tab.State
   | AuctionEndDropdown Dropdown.State
   | SetAuctionDays Int
@@ -141,8 +142,8 @@ type alias ArtListing =
   { art : File
   , preview : String
   , title : String
-  , biddingEnding : Date
-  , biddingStart : Date
+  , biddingEnding : Posix
+  , biddingStart : Posix
   , artist : Artist
   , requests : List (String, Int)
   }
@@ -192,6 +193,7 @@ init flags url key =
                             --                 }
                             -- }--
                             { navKey = key
+                            , bioDraft = "init model draft"
                             , controlStartArtWithFeature = Nothing
                             , artistAddress = "hhefesto"
                             , navState = navState
@@ -231,7 +233,7 @@ init flags url key =
                             }
   in ( model
      , Cmd.batch
-         [ Date.today |> Task.perform ReceiveDate
+         [ Time.now |> Task.perform ReceiveDate
          , urlCmd
          , navCmd
          ]
@@ -270,7 +272,7 @@ setImagePreview url sart = { sart | imagePreview = url }
 setArtistState : Model -> ArtistState -> Model
 setArtistState model sart = { model | artistState = sart }
 
-setDate : ArtistState -> Maybe Date -> ArtistState
+setDate : ArtistState -> Maybe Posix -> ArtistState
 setDate sart date = { sart | selectedAuctionEndDate = date }
 
 setPrepareListingErrorVisibility : ArtistState -> Alert.Visibility -> ArtistState
@@ -298,9 +300,12 @@ setAuctionEndDropdown sart s = { sart | auctionEndDropdown = s }
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model = case msg of
+  BioDraft str -> ({ model | bioDraft  = str }
+                  , Cmd.none
+                  )
   SetArtistAddress str -> ({ model | artistAddress  = str }
-                                      , Cmd.none
-                                      )
+                          , Cmd.none
+                          )
   RegisterFeatureCreatedListener i -> ({ model | registerFeatureCreatedListenerList  = i :: model.registerFeatureCreatedListenerList }
                                       , Cmd.none
                                       )
@@ -309,7 +314,7 @@ update msg model = case msg of
                                   )
 
   ControlStartArtWithFeatureReceiver bool -> ({ model | controlStartArtWithFeature = Just bool}, Cmd.none)
-  ControlStartArtWithFeatureSend pair -> (model, controlStartArtWithFeatureSend pair)
+  ControlStartArtWithFeatureSend pair -> (model, controlStartArtWithFeatureSend <| Debug.log "ControlStartArtWithFeatureSend pair: " pair)
 
   FinishArtReceiver bool -> ({ model | finishArt = Just bool}, Cmd.none)
   FinishArtSend i -> (model, finishArtSend i)
@@ -363,7 +368,7 @@ update msg model = case msg of
                             "" -> (model, Cmd.none)
                             _ -> ({model | requestsDict = Dict.update i (\x -> Just str) model.requestsDict}, Cmd.none)
   SetAuctionDays i -> (setArtistState model <| setDate model.artistState
-                                            <| Maybe.map (Date.add Date.Days i) model.today, Cmd.none)
+                                            <| Maybe.map (\posix -> millisToPosix <| posixToMillis posix + (i * 86400000) ) model.today, Cmd.none)
   AuctionEndDropdown state -> (setArtistState model <| setAuctionEndDropdown model.artistState state, Cmd.none)
   Recv incoming -> ({model | fromJavascript = incoming }, Cmd.none)
   -- GetArtDisplayRecv incoming ->
@@ -375,7 +380,7 @@ update msg model = case msg of
     , Cmd.none
     )
   NewListing l -> ( { model | artListings = addToArtListingsDict l model.artListings }
-                  , Cmd.none
+                  , Task.perform ControlStartArtWithFeatureSend <| Task.succeed (String.fromInt((posixToMillis l.biddingEnding) // 1000), l.preview)
                   )
   ReceiveDate date -> ( { model | today = Just date }, Cmd.none)
   SetArtist str -> ( setArtistState model <| setArtist model.artistState str, Cmd.none )
@@ -436,7 +441,7 @@ routeParser = UrlParser.oneOf
   ]
 
 view : Model -> Browser.Document Msg
-view model = let _ = Debug.log "Model" model in
+view model = -- let _ = Debug.log "Model" model in
   { title = "playNFT"
   , body =
       [ div []
@@ -505,7 +510,10 @@ makeOwnerCardFromListing artListing =
         ]
     |> Card.block []
         -- [ Block.text [] [ text <| "Artist: " ++ artListing.artist.name ]
-        [ Block.text [] [ text <| "Bidding ending at: " ++ Date.toIsoString artListing.biddingEnding ]
+        [ Block.text [] [ text <| "Bidding ending at: " ++ String.fromInt (toYear utc artListing.biddingEnding)
+                                                        ++ "-" ++ monthToString (toMonth utc artListing.biddingEnding)
+                                                        ++ "-" ++ String.fromInt (toDay utc artListing.biddingEnding)
+                                                        ++ " UTC"]
         , Block.titleH4 [] [ text <| "Requests:" ]
         , Block.custom <|
             case artListing.requests of
@@ -536,12 +544,14 @@ makePublicCardFromListing model artListingId artListing =
         ]
     |> Card.block []
         [ Block.text [] [ text <| "Artist: " ++ artListing.artist.name ]
-        , Block.text [] [ text <| "Bidding ending at: " ++ Date.toIsoString artListing.biddingEnding ]
+        , Block.text [] [ text <| "Bidding ending at: " ++ String.fromInt (toYear utc artListing.biddingEnding)
+                                                        ++ "-" ++ monthToString (toMonth utc artListing.biddingEnding)
+                                                        ++ "-" ++ String.fromInt (toDay utc artListing.biddingEnding)
+                                                        ++ " UTC"]
         , Block.titleH4 [] [ text "Make a request:" ]
         , Block.text [] [ text "Request: "
                         , Textarea.textarea
-                            [ Textarea.id "myarea"
-                            , Textarea.rows 2
+                            [ Textarea.rows 2
                             , Textarea.onInput <| SetRequestDraft artListingId
                             ]
                         , br [] []
@@ -564,6 +574,23 @@ makePublicCardFromListing model artListingId artListing =
                         ]
         ]
     |> Card.view
+
+
+monthToString : Month -> String
+monthToString month =
+  case month of
+    Jan -> "Jan"
+    Feb -> "Feb"
+    Mar -> "Mar"
+    Apr -> "Apr"
+    May -> "May"
+    Jun -> "Jun"
+    Jul -> "Jul"
+    Aug -> "Aug"
+    Sep -> "Sep"
+    Oct -> "Oct"
+    Nov -> "Nov"
+    Dec -> "Dec"
 
 pageArtistInterface : Model -> List (Html Msg)
 pageArtistInterface model =
@@ -613,7 +640,30 @@ artistProfileTab model =
                 ]
   , Grid.row [] [ Grid.col [ Col.textAlign Text.alignXsCenter ]
                            [ br [] []
+                           , text "Artist: "
                            , input [ placeholder "Artist's name", onInput SetArtist ] []
+                           , br [] []
+                           , br [] []
+                           , text "Bio:"
+                           , Textarea.textarea
+                               [ Textarea.rows 2
+                               -- , Textarea.value "Write your own bio ;)"
+                               -- , Textarea.placeholder "Artist's name"
+                               , Textarea.onInput BioDraft
+
+                               ]
+                           , br [] []
+                           , Button.button
+                               [ Button.secondary
+                               , Button.large
+                               , Button.block
+                               , Button.attrs [ onClick <| case (model.artistState.loggedArtist, model.bioDraft) of
+                                                             (_,"") -> ModifyArtistProfileSend ("TODO: improve this", "TODO: improve this")
+                                                             (Nothing, bioDraft) -> ModifyArtistProfileSend ("TODO: improve this", "TODO: improve this")
+                                                             (Just a, bioDraft) -> ModifyArtistProfileSend (a.name, bioDraft)
+                                              ]
+                               ]
+                               [ text "Update profile" ]
                            ]
                 ]
   ]

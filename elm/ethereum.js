@@ -13,7 +13,6 @@ const apiHost = constants.apiHost;
 // --- section for simple promises that are initialized once, and then never changed --------------------
 const web3 = new Promise ((resolve, reject) => {
     detectEthereumProvider().then((provider) => {
-        console.log("OTHER111111111111111111111");
         if (provider) {
             resolve(new Web3(provider));
         } else {
@@ -24,7 +23,6 @@ const web3 = new Promise ((resolve, reject) => {
 
 const siteContract = new Promise ((resolve, reject) => {
     web3.then((w3) => {
-        console.log("OTHER2222222222222");
         resolve(new w3.eth.Contract(site, constants.contractAddress));
     });
 });
@@ -241,8 +239,11 @@ const finishArt = function (artId) {
 };
 
 const signFeatureImage = function (featureId, imageHash) {
+    console.log("signFeatureImage!!!!!!!!!!!!!!!!!!!!!!!!!1");
     return new Promise((resolve, reject) => {
+        console.log("signFeatureImage!!!!!!!!!!!!!!!!!!!!!!!!!2");
         web3.then ((w3) => {
+            console.log("signFeatureImage!!!!!!!!!!!!!!!!!!!!!!!!!0");
             userAccount.then ((account) => {
                 w3.currentProvider.sendAsync({
                     method: 'net_version',
@@ -264,9 +265,9 @@ const signFeatureImage = function (featureId, imageHash) {
                     },
                         primaryType:"Message",
                         domain:{name:"Play NFT",
-                                version:process.env.REACT_APP_VERSION,
-                                chainId:process.env.REACT_APP_CHAIN_ID,
-                                verifyingContract:process.env.REACT_APP_CONTRACT_ADDRESS
+                                version: constants.elmAppVersion,
+                                chainId: constants.chainId,
+                                verifyingContract: constants.contractAddress
                                 },
                         message:{featureId:featureId, imageHash:imageHash}
                     });
@@ -297,8 +298,10 @@ const signFeatureImage = function (featureId, imageHash) {
 const controlCompleteFeature = function (artId, featureId, completeArtwork, featureEndTime, imageData) {
     return new Promise((resolve, reject) => {
         web3.then ((w3) => {
+            console.log("controlCompleteFeature!!!!!!!!!!!!!!!!!!!!!!!!!1");
+            console.log(imageData);
             const imageHash = w3.utils.sha3(imageData);
-
+            console.log("controlCompleteFeature!!!!!!!!!!!!!!!!!!!!!!!!!0");
             signFeatureImage(featureId, imageHash).then((signResult) => {
                 const formData = new FormData();
                 formData.append("imageData", imageData);
@@ -331,16 +334,24 @@ const controlCompleteFeature = function (artId, featureId, completeArtwork, feat
 };
 
 // returns solidity receipt for startFeature
-const controlStartArtWithFeature = function (featureEndTime, imageData) {
+const controlStartArtWithFeature = function (inputArray) {
+    console.log("HEREEEEEEE");
     return new Promise((resolve, reject) => {
         startArtWithFeature().then((receipt) => {
 
             const artId = receipt.events.ArtCreated.returnValues.artId;
             const featureId = receipt.events.FeatureCreated.returnValues.featureId;
+            console.log("HEREEEEEEE1");
+            console.log(inputArray[0]);
 
-            controlCompleteFeature(artId, featureId, false, featureEndTime, imageData).then(receipt => {
+            console.log("--------");
+            console.log(inputArray[1]);
+            //console.log(imageData);
+            controlCompleteFeature(artId, featureId, false, inputArray[0], inputArray[1]).then(receipt => {
+                console.log("HEREEEEEEE3");
                 resolve(receipt);
             }).catch (err => reject(err));
+            console.log("HEREEEEEEE2");
         });
     });
 };

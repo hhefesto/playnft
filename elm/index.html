@@ -21,14 +21,13 @@
 
     </style>
   </head>
-  <body onload="myFunction()">
+  <body>
+  <!-- <body onload="myFunction()"> -->
     <div id="playNFT"></div>
     <div id="testText"></div>
   </body>
   <script type="text/javascript">
-    const myFunction = _ => {
-      console.log("BLAAAAAAAAAAAAAAAAAAA!@!!!!");
-    };
+    
     var app = Elm.Main.init({
       node: document.getElementById('playNFT')
     });
@@ -71,9 +70,16 @@
         });
     });
     app.ports.controlStartArtWithFeatureSend.subscribe(function(featureEndTime, imageData) {
-        controlStartArtWithFeature(featureEndTime, imageData).then(_ => {
+        console.log("RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR0");
+        controlStartArtWithFeature(featureEndTime, imageData).then(receipt => {
+            alert("new art created");
+            console.log("RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR1");
             app.ports.controlStartArtWithFeatureReceiver.send(true);
-        }).catch(_ => {
+        }, err => {
+                    alert(err.error);
+                    console.log(err);
+                }).catch(_ => {
+            console.log("RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR2");
             app.ports.controlStartArtWithFeatureReceiver.send(false);
         });
     });

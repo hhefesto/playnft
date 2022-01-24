@@ -25,5 +25,5 @@ $ cd path/to/playNFT
 $ nix develop -c $SHELL # if not already there
 $ cd eth
 $ yarn console # the next command you get `to` address in metamask, and `from` address from one of the multiple accounts with 100 eth that get displayed right after doing `yarn startg`, and that should give your account 10 eth
-truffle(development)> web3.eth.sendTransaction({ from:"0xfd8c58E84f095810820f567bC5417C3bA5902454",to:"0xd69E5c706B3F0E3E121D4686130E513A0E6729C7", value:9999999999999999999 });
+truffle(development)> web3.eth.sendTransaction({ from:"",to:"0xD01990F227CcBF0626E09F3B61Df1221B9b85841", value:9999999999999999999 });
 ```
