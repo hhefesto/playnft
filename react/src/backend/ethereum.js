@@ -137,15 +137,21 @@ const modifyArtistProfile = function (name, description) {
 
 const startArtWithFeature = function () {
     return new Promise((resolve, reject) => {
+        console.log("1111111111");
         siteContract.then((sc) => {
+            console.log("11111111112");
             userAccount.then ((account) => {
+                console.log("11111111113");
                 sc.methods.startArtWithFeature().estimateGas().then((gas) => {
+                    console.log("11111111114");
                     sc.methods.startArtWithFeature().send({
                         from: account,
                         gas,
                     }).on('error', function(error, receipt) {
+                        console.log("11111111115");
                         reject(error);
                     }).on('receipt', function(receipt) {
+                        console.log("11111111116");
                         resolve(receipt);
                     });
                 });

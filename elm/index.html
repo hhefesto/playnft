@@ -33,19 +33,8 @@
     });
     
     
-    // const web3 = new Web3(constants.providerHost);
-    // console.log("web3");
-    // console.log(web3);
-    // const contract = new web3.eth.Contract(site, constants.contractAddress);
-    // console.log("contract");
-    // console.log(contract);
-    
-    // socket.addEventListener("message", function(event) {
-    //   app.ports.messageReceiver.send(event.data);
-    // });
-
-      app.ports.sendMessage.subscribe(function(message) {
-          console.log("1111111111111");
+    app.ports.sendMessage.subscribe(function(message) {
+        console.log("1111111111111");
         console.log(message);
           siteContract.then(sc => {
               console.log("2222222222222");
@@ -61,25 +50,19 @@
             });
         })
     });
-    // // returns {artistName, imgUrl, timeText, bidAmount, featureRequest, artId, featureId}
-    // const getArtDisplay = function (i) { // i is the artId
-
     app.ports.getArtDisplaySend.subscribe(function(artId) {
         getArtDisplay(artId).then(x => {
             app.ports.getArtDisplayReceiver.send(x);
         });
     });
     app.ports.controlStartArtWithFeatureSend.subscribe(function(featureEndTime, imageData) {
-        console.log("RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR0");
         controlStartArtWithFeature(featureEndTime, imageData).then(receipt => {
             alert("new art created");
-            console.log("RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR1");
             app.ports.controlStartArtWithFeatureReceiver.send(true);
         }, err => {
                     alert(err.error);
                     console.log(err);
                 }).catch(_ => {
-            console.log("RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR2");
             app.ports.controlStartArtWithFeatureReceiver.send(false);
         });
     });
@@ -91,19 +74,14 @@
         });
     });
     app.ports.getArtistSend.subscribe(function(addr) {
-        console.log("HERE!!!!!!!!") // this does trigger
-        try
-        {getArtist(addr).then(x => {
-            console.log("THEN HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        // try{
+        getArtist(addr).then(x => {
             app.ports.getArtistReceiver.send(x);
         }).catch(y => { // CATCH doesn't fire when provided a wrong addr and THEN also wasn't triggered. Throws "Uncaught (in promise) Error: bad address checksum". TODO: FIX
-            console.log("CATCH HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             app.ports.getArtistErrorReceiver.send(y);
         }).finally(x => { console.log("FINALLY HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");});
-        }catch (y){console.log("TRY HERE!!!!!!!!!!!!!!!!!!!!!")} // Also doesn't trigger. TODO Fix
-        });
-      
-    // function getNumArt () public view returns (uint) {
+        // }catch (y){console.log("TRY HERE!!!!!!!!!!!!!!!!!!!!!")} // Also doesn't trigger. TODO Fix
+    });
     app.ports.getNumArtSend.subscribe(function() {
         getNumArt().then(x => {
             aux = parseInt(x)
@@ -117,8 +95,6 @@
             app.ports.getNumArtReceiver.send(-1);
         });
     });
-
-    // function getNumArtist () public view returns (uint) {
     app.ports.getNumArtistSend.subscribe(function() {
         getNumArtists().then(x => {
             aux = parseInt(x)
@@ -132,8 +108,6 @@
             app.ports.getNumArtistReceiver.send(-1);
         });
     });
-
-    // function getArt (uint i) public view returns (address, bool, int64) {
     app.ports.getArtSend.subscribe(function(artId) {
         
         getArt(artId).then(x => {
@@ -142,8 +116,6 @@
             console.log("¡¡¡¡¡¡¡¡¡¡¡This will wrongfully never be triggered!!!!!!!!!!!!!!!"); // Also unable to catch. See getArtistSend. TODO Fix
         });
     });
-
-    // function getFeature (uint64 featureId) public view returns (uint, uint, int64, int64, bool) {
     app.ports.getFeatureSend.subscribe(function(artId) {
         
         getFeature(artId).then(x => {
@@ -153,8 +125,6 @@
             console.log("¡¡¡¡¡¡¡¡¡¡¡This will wrongfully never be triggered!!!!!!!!!!!!!!!"); // Also unable to catch. See getArtistSend. TODO Fix
         });
     });
-      
-    // function getDisplayFeature (uint16 artId) public view returns (int64) {
     app.ports.getDisplayFeatureSend.subscribe(function(artId) {
         
         getDisplayFeature(artId).then(x => {
@@ -169,19 +139,13 @@
             console.log("¡¡¡¡¡¡¡¡¡¡¡This will wrongfully never be triggered!!!!!!!!!!!!!!!"); // Also unable to catch. See getArtistSend. TODO Fix
         });
     });
-    
-    // function getBid (uint64 bidId) public view returns (int64, address payable, uint, string memory) {
     app.ports.getBidSend.subscribe(function(bidId) {
-        
         getBid(bidId).then(x => {
-            
             app.ports.getBidReceiver.send(x);
         }).catch(x =>{
             console.log("¡¡¡¡¡¡¡¡¡¡¡This will wrongfully never be triggered!!!!!!!!!!!!!!!"); // Also unable to catch. See getArtistSend. TODO Fix
         });
     });
-
-    // function modifyArtistProfile (string memory _name, string memory _description) public {
     app.ports.modifyArtistProfileSend.subscribe(function(args) {
         var [name, description] = args;
         modifyArtistProfile(name, description).then(_ => {
@@ -190,7 +154,6 @@
             app.ports.modifyArtistProfileReceiver.send(false);
         });
     });
-    // function startArtWithFeature () public {
     app.ports.startArtWithFeatureSend.subscribe(_ => {
         startArtWithFeature().then(_ => {
             app.ports.startArtWithFeatureReceiver.send(true);
@@ -198,7 +161,6 @@
             app.ports.startArtWithFeatureReceiver.send(false);
         });
     });
-    // function startFeature (uint64 artId, uint _endTime) public {
     app.ports.startFeatureSend.subscribe(args => {
         var [artId, endTimeInt] = args;
         startFeature(artId, endTimeInt).then(_ => {
@@ -207,14 +169,12 @@
             app.ports.startFeatureReceiver.send(false);
         });
     });
-    // function makeBid (uint64 artId, string memory _request) public payable returns (bool, string memory) {
     app.ports.makeBidSend.subscribe(args => {
         var [artId, request] = args;
         makeBid(artId, request).then(x => {
             app.ports.makeBidReceiver.send(x);
         });
     });
-    // function nextFeature (uint64 artId, uint endTime) public {
     app.ports.nextFeatureSend.subscribe(args => {
         var [artId, endTimeInt] = args;
         nextFeature(artId, endTimeInt).then(_ => {
@@ -223,7 +183,6 @@
             app.ports.nextFeatureReceiver.send(false);
         });
     });
-    // function finishArt (uint64 artId) public {
     app.ports.finishArtSend.subscribe(artId => {
         finishArt(artId).then(_ => {
             app.ports.finishArtReceiver.send(true);
