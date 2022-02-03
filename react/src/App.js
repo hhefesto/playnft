@@ -316,12 +316,12 @@ class ArtDisplay extends React.Component {
 
 	    api.getArtList().then(al => thisComponent.setState({artList:al}));
 
-            // listen for new art to display
-            api.registerFeatureCreatedListener(featureId => {
-		    api.getArtList().then(al => thisComponent.setState({artList:al}));
-            });
+        // listen for new art to display
+        api.registerFeatureCreatedListener(featureId => {
+        api.getArtList().then(al => thisComponent.setState({artList:al}));
+        });
 
-            //TODO add NewBid event
+        //TODO add NewBid event
     }
 
     render () {

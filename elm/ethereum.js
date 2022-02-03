@@ -447,8 +447,8 @@ const getArtList = function () {
 		getNumArt().then((na) => {
 		    var artP = [];
 		    for (var i = 1; i <= 10 && na - i >= 0; i++) {
-			var artId = na - i;
-			artP.push(getArtDisplay(artId));
+                var artId = na - i;
+                artP.push(getArtDisplay(artId));
 		    }
 		    Promise.all(artP).then(l => resolve(l));
 		});

@@ -441,7 +441,7 @@ routeParser = UrlParser.oneOf
   ]
 
 view : Model -> Browser.Document Msg
-view model = -- let _ = Debug.log "Model" model in
+view model = let _ = Debug.log "Model" model in
   { title = "playNFT"
   , body =
       [ div []
