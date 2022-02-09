@@ -56,6 +56,9 @@ port finishArtSend : Int -> Cmd msg
 port controlStartArtWithFeatureReceiver : (Bool -> msg) -> Sub msg
 port controlStartArtWithFeatureSend : (String, String) -> Cmd msg
 
-                                      
+port getArtListReceiver : (List Value -> msg) -> Sub msg
+port getArtListSend : () -> Cmd msg
+
+
 port registerArtCreatedListener : (Int -> msg) -> Sub msg
 port registerFeatureCreatedListener : (Int -> msg) -> Sub msg

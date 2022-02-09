@@ -314,11 +314,18 @@ class ArtDisplay extends React.Component {
     componentDidMount() {
         const thisComponent = this;
 
-	    api.getArtList().then(al => thisComponent.setState({artList:al}));
+	    api.getArtList().then(al => {
+            console.log("Something~!!!!!!!");
+            console.log(typeof(al[0]));
+            console.log(al);
+            console.log(al[0]);
+
+            thisComponent.setState({artList:al});
+            });
 
         // listen for new art to display
         api.registerFeatureCreatedListener(featureId => {
-        api.getArtList().then(al => thisComponent.setState({artList:al}));
+            api.getArtList().then(al => thisComponent.setState({artList:al}));
         });
 
         //TODO add NewBid event

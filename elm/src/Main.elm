@@ -41,6 +41,7 @@ type alias Model =
   , artistAddress : String -- TODO: maybe make it maybe
   , registerFeatureCreatedListenerList : List Int
   , registerArtCreatedListenerList : List Int
+  , listArt : List Value
   , finishArt : Maybe Bool
   , controlStartArtWithFeature : Maybe Bool
   , nextFeature : Maybe Bool
@@ -88,6 +89,8 @@ type Msg
   | RegisterArtCreatedListener Int
   | ControlStartArtWithFeatureReceiver Bool
   | ControlStartArtWithFeatureSend (String, String)
+  | GetArtListSend
+  | GetArtListReceiver (List Value)
   | FinishArtReceiver Bool
   | FinishArtSend Int
   | NextFeatureReceiver Bool
@@ -193,6 +196,7 @@ init flags url key =
                             --                 }
                             -- }--
                             { navKey = key
+                            , listArt = []
                             , bioDraft = "init model draft"
                             , controlStartArtWithFeature = Nothing
                             , artistAddress = "hhefesto"
@@ -259,6 +263,7 @@ subscriptions model = Sub.batch [ Navbar.subscriptions model.navState NavMsg
                                 , makeBidReceiver MakeBidReceiver
                                 , nextFeatureReceiver NextFeatureReceiver
                                 , finishArtReceiver FinishArtReceiver
+                                , getArtListReceiver GetArtListReceiver
                                 , controlStartArtWithFeatureReceiver ControlStartArtWithFeatureReceiver
                                 , registerArtCreatedListener RegisterArtCreatedListener
                                 , registerFeatureCreatedListener RegisterFeatureCreatedListener
@@ -315,7 +320,8 @@ update msg model = case msg of
 
   ControlStartArtWithFeatureReceiver bool -> ({ model | controlStartArtWithFeature = Just bool}, Cmd.none)
   ControlStartArtWithFeatureSend pair -> (model, controlStartArtWithFeatureSend <| Debug.log "ControlStartArtWithFeatureSend pair: " pair)
-
+  GetArtListReceiver lst -> ({ model | listArt = lst}, Cmd.none)
+  GetArtListSend -> (model, getArtListSend ())
   FinishArtReceiver bool -> ({ model | finishArt = Just bool}, Cmd.none)
   FinishArtSend i -> (model, finishArtSend i)
   NextFeatureReceiver bool -> ({ model | nextFeature = Just bool}, Cmd.none)
@@ -1004,6 +1010,18 @@ pageArtListingsInterface model =
               , Button.attrs [ onClick <| FinishArtSend 0 ]
               ]
               [ text "finishArt" ]
+          ]
+      ]
+  , Grid.row []
+      [ Grid.col [ Col.textAlign Text.alignXsCenter ]
+          [ br [] []
+          , Button.button
+              [ Button.secondary
+              , Button.large
+              , Button.block
+              , Button.attrs [ onClick <| GetArtListSend ]
+              ]
+              [ text "getArtList" ]
           ]
       ]
   , Grid.row []

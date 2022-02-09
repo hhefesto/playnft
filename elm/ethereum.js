@@ -335,23 +335,13 @@ const controlCompleteFeature = function (artId, featureId, completeArtwork, feat
 
 // returns solidity receipt for startFeature
 const controlStartArtWithFeature = function (inputArray) {
-    console.log("HEREEEEEEE");
     return new Promise((resolve, reject) => {
         startArtWithFeature().then((receipt) => {
-
             const artId = receipt.events.ArtCreated.returnValues.artId;
             const featureId = receipt.events.FeatureCreated.returnValues.featureId;
-            console.log("HEREEEEEEE1");
-            console.log(inputArray[0]);
-
-            console.log("--------");
-            console.log(inputArray[1]);
-            //console.log(imageData);
             controlCompleteFeature(artId, featureId, false, inputArray[0], inputArray[1]).then(receipt => {
-                console.log("HEREEEEEEE3");
                 resolve(receipt);
             }).catch (err => reject(err));
-            console.log("HEREEEEEEE2");
         });
     });
 };
@@ -449,6 +439,8 @@ const getArtList = function () {
 		    for (var i = 1; i <= 10 && na - i >= 0; i++) {
                 var artId = na - i;
                 artP.push(getArtDisplay(artId));
+                console.log("getArtList");
+                console.log(typeof(getArtDisplay(artId)));
 		    }
 		    Promise.all(artP).then(l => resolve(l));
 		});

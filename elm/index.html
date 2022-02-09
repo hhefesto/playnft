@@ -190,5 +190,15 @@
             app.ports.finishArtReceiver.send(false);
         });
     });
+    app.ports.getArtListSend.subscribe(_ => {
+        console.log("Here!!!!!!!!!!!!!!!!!!!!!");
+        getArtList().then(al => {
+            console.log("Here!!!!!!!!!!!!!!!!!!!!!0");
+            app.ports.getArtListReceiver.send(al);
+        }).catch(_ => {
+            console.log("Here!!!!!!!!!!!!!!!!!!!!!1");
+            app.ports.getArtListReceiver.send([]);
+        });
+    });
 
   </script>
